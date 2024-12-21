@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: s3-bucket-api
+  output:
+    ansi:
+      enabled: ALWAYS
+
+aws:
+  credentials:
+    access-key: ${ACCESS_KEY}
+    secret-key: ${SECRET_KEY}
+  region: ${REGION}
