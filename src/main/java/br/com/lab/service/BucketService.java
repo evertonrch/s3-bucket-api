@@ -1,8 +1,8 @@
 package br.com.lab.service;
 
 import br.com.lab.dto.BucketResponse;
-import br.com.lab.exception.BucketExistenteException;
 import br.com.lab.exception.RecursoNaoAcessivelException;
+import br.com.lab.rule.BucketJaExisteRule;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
@@ -19,16 +19,15 @@ public class BucketService {
     private static final Logger log = LoggerFactory.getLogger(BucketService.class);
 
     private final AmazonS3 s3Client;
+    private final BucketJaExisteRule bucketJaExisteRule;
 
-    public BucketService(AmazonS3 s3Client) {
+    public BucketService(AmazonS3 s3Client, BucketJaExisteRule bucketJaExisteRule) {
         this.s3Client = s3Client;
+        this.bucketJaExisteRule = bucketJaExisteRule;
     }
 
     public BucketResponse createBucket(String bucketName) {
-        if (s3Client.doesBucketExistV2(bucketName)) {
-            log.error("erro ao criar o bucket {}", bucketName);
-            throw new BucketExistenteException(String.format("Bucket %s já existe.", bucketName));
-        }
+        bucketJaExisteRule.validar(bucketName);
 
         try {
             Bucket bucket = s3Client.createBucket(bucketName);
