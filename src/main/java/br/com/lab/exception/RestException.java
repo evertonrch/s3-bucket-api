@@ -1,5 +1,6 @@
 package br.com.lab.exception;
 
+import com.amazonaws.services.s3.model.AmazonS3Exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,6 +26,11 @@ public class RestException {
 
     @ExceptionHandler(RegiaoInvalidaException.class)
     public ProblemDetail handleRegiaoInvalidaException(RegiaoInvalidaException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(AmazonS3Exception.class)
+    public ProblemDetail handleAmazonS3Exception(AmazonS3Exception ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 }

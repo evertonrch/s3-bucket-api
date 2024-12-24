@@ -5,10 +5,9 @@ import br.com.lab.dto.BucketResponse;
 import br.com.lab.service.BucketService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/buckets")
@@ -24,5 +23,11 @@ public class BucketController {
     public ResponseEntity<BucketResponse> createBucket(@RequestBody BucketRequest bucketRequest) {
         var bucketResponse = bucketService.createBucket(bucketRequest.bucketName(), bucketRequest.region());
         return new ResponseEntity<>(bucketResponse, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BucketResponse>> buckets() {
+        var buckets = bucketService.listBuckets();
+        return buckets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(buckets);
     }
 }

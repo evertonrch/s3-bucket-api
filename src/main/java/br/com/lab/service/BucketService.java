@@ -1,8 +1,8 @@
 package br.com.lab.service;
 
-import br.com.lab.factory.S3ClientFactory;
 import br.com.lab.dto.BucketResponse;
 import br.com.lab.exception.RecursoNaoAcessivelException;
+import br.com.lab.factory.S3ClientFactory;
 import br.com.lab.rule.BucketJaExisteRule;
 import br.com.lab.rule.ValidaRegiaoRule;
 import br.com.lab.utils.DataUtils;
@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class BucketService {
@@ -42,8 +43,8 @@ public class BucketService {
 
             Bucket bucket = client.createBucket(bucketName);
             bucket.setCreationDate(new Date());
-
             var toLocalDateTime = DataUtils.toLocalDateTime(bucket.getCreationDate());
+
             return new BucketResponse(bucket.getName(), client.getRegionName(), toLocalDateTime);
         } catch (AmazonS3Exception ex) {
             if (ex.getErrorType().equals(AmazonServiceException.ErrorType.Client)) {
@@ -52,5 +53,14 @@ public class BucketService {
             log.error("Algo deu errado. {}, type: {}", ex.getMessage(), ex.getErrorType());
             throw ex;
         }
+    }
+
+    public List<BucketResponse> listBuckets() {
+        return s3Client.createClient(null).listBuckets().stream().map(bucket -> {
+            var toLocalDate = DataUtils.toLocalDateTime(bucket.getCreationDate());
+            String bucketName = s3Client.createClient(null).getBucketLocation(bucket.getName());
+
+            return new BucketResponse(bucket.getName(), bucketName, toLocalDate);
+        }).toList();
     }
 }
