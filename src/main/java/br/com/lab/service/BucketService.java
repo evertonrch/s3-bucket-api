@@ -1,9 +1,13 @@
 package br.com.lab.service;
 
+import br.com.lab.factory.S3ClientFactory;
 import br.com.lab.dto.BucketResponse;
 import br.com.lab.exception.RecursoNaoAcessivelException;
 import br.com.lab.rule.BucketJaExisteRule;
+import br.com.lab.rule.ValidaRegiaoRule;
+import br.com.lab.utils.DataUtils;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
@@ -18,22 +22,29 @@ public class BucketService {
 
     private static final Logger log = LoggerFactory.getLogger(BucketService.class);
 
-    private final AmazonS3 s3Client;
+    private final S3ClientFactory s3Client;
     private final BucketJaExisteRule bucketJaExisteRule;
+    private final ValidaRegiaoRule validaRegiaoRule;
 
-    public BucketService(AmazonS3 s3Client, BucketJaExisteRule bucketJaExisteRule) {
+    public BucketService(S3ClientFactory s3Client, BucketJaExisteRule bucketJaExisteRule, ValidaRegiaoRule validaRegiaoRule) {
         this.s3Client = s3Client;
         this.bucketJaExisteRule = bucketJaExisteRule;
+        this.validaRegiaoRule = validaRegiaoRule;
     }
 
-    public BucketResponse createBucket(String bucketName) {
-        bucketJaExisteRule.validar(bucketName);
+    public BucketResponse createBucket(String bucketName, String regionName) {
+        Regions regiao = validaRegiaoRule.validar(regionName);
 
         try {
-            Bucket bucket = s3Client.createBucket(bucketName);
+            AmazonS3 client = s3Client.createClient(regiao);
+
+            bucketJaExisteRule.validar(bucketName, client);
+
+            Bucket bucket = client.createBucket(bucketName);
             bucket.setCreationDate(new Date());
 
-            return new BucketResponse(bucket);
+            var toLocalDateTime = DataUtils.toLocalDateTime(bucket.getCreationDate());
+            return new BucketResponse(bucket.getName(), client.getRegionName(), toLocalDateTime);
         } catch (AmazonS3Exception ex) {
             if (ex.getErrorType().equals(AmazonServiceException.ErrorType.Client)) {
                 throw new RecursoNaoAcessivelException("Usuário não tem permissão para essa ação.");

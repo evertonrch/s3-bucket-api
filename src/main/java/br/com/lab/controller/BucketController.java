@@ -22,7 +22,7 @@ public class BucketController {
 
     @PostMapping()
     public ResponseEntity<BucketResponse> createBucket(@RequestBody BucketRequest bucketRequest) {
-        var bucketResponse = bucketService.createBucket(bucketRequest.bucketName());
+        var bucketResponse = bucketService.createBucket(bucketRequest.bucketName(), bucketRequest.region());
         return new ResponseEntity<>(bucketResponse, HttpStatus.CREATED);
     }
 }

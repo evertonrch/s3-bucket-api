@@ -1,3 +1,3 @@
 package br.com.lab.dto;
 
-public record BucketRequest(String bucketName) {}
+public record BucketRequest(String bucketName, String region) {}

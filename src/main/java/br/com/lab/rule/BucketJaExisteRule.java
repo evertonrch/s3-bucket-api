@@ -11,14 +11,8 @@ public class BucketJaExisteRule {
 
     private static final Logger log = LoggerFactory.getLogger(BucketJaExisteRule.class);
 
-    private final AmazonS3 s3Client;
-
-    public BucketJaExisteRule(AmazonS3 s3Client) {
-        this.s3Client = s3Client;
-    }
-
-    public void validar(String bucketName) {
-        if (s3Client.doesBucketExistV2(bucketName)) {
+    public void validar(String bucketName, AmazonS3 client) {
+        if (client.doesBucketExistV2(bucketName)) {
             log.error("erro ao criar o bucket {}", bucketName);
             throw new BucketExistenteException(String.format("Bucket %s já existe.", bucketName));
         }

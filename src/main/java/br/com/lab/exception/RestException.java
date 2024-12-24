@@ -22,4 +22,9 @@ public class RestException {
     public ProblemDetail handleRecursoNaoAcessivelException(RecursoNaoAcessivelException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
     }
+
+    @ExceptionHandler(RegiaoInvalidaException.class)
+    public ProblemDetail handleRegiaoInvalidaException(RegiaoInvalidaException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
 }
