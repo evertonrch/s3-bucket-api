@@ -1,5 +1,6 @@
 package br.com.lab.exception;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -29,8 +30,13 @@ public class RestException {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
-    @ExceptionHandler(AmazonS3Exception.class)
-    public ProblemDetail handleAmazonS3Exception(AmazonS3Exception ex) {
+    @ExceptionHandler(BucketNotFoundException.class)
+    public ProblemDetail handleBucketNotFoundException(BucketNotFoundException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler({AmazonS3Exception.class, SdkClientException.class})
+    public ProblemDetail handleAmazonS3Exception() {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno.");
     }
 }

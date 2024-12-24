@@ -1,16 +1,19 @@
 package br.com.lab.service;
 
 import br.com.lab.dto.BucketResponse;
+import br.com.lab.exception.BucketNotFoundException;
 import br.com.lab.exception.RecursoNaoAcessivelException;
 import br.com.lab.factory.S3ClientFactory;
 import br.com.lab.rule.BucketJaExisteRule;
 import br.com.lab.rule.ValidaRegiaoRule;
 import br.com.lab.utils.DataUtils;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.DeleteBucketRequest;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,5 +69,19 @@ public class BucketService {
         });
 
         return buckets;
+    }
+
+    public void deleteBucket(String bucketName) {
+        AmazonS3 client = s3Client.createClient(null);
+        try {
+            String region = client.getBucketLocation(bucketName);
+            AmazonS3 clientWithRegion = s3Client.createClient(Regions.fromName(region));
+
+            clientWithRegion.deleteBucket(new DeleteBucketRequest(bucketName));
+            log.info("Bucket {} na região {} deletado.", bucketName, region);
+        } catch (AmazonS3Exception ex) {
+            log.error("Bucket '{}' não encontrado", bucketName);
+            throw new BucketNotFoundException("Bucket não existe", ex);
+        }
     }
 }

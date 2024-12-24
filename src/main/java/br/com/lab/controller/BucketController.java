@@ -30,4 +30,10 @@ public class BucketController {
         var buckets = bucketService.listBuckets();
         return buckets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(buckets);
     }
+
+    @DeleteMapping("/{bucketName}")
+    public ResponseEntity<Void> deleteBucket(@PathVariable("bucketName") String bucket) {
+        bucketService.deleteBucket(bucket);
+        return ResponseEntity.noContent().build();
+    }
 }
