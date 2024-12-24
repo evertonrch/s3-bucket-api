@@ -33,7 +33,7 @@ public class RestException {
 
     @ExceptionHandler(BucketNotFoundException.class)
     public ProblemDetail handleBucketNotFoundException(BucketNotFoundException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler({AmazonS3Exception.class, SdkClientException.class})

@@ -73,16 +73,10 @@ public class BucketService {
     public void deleteBucket(String bucketName) {
         AmazonS3 client = s3Client.createClient(null);
         try {
-            String region = client.getBucketLocation(bucketName);
-
-            if ("US".equals(region)) {
-                region = "us-east-1";
-            }
-
-            AmazonS3 clientWithRegion = s3Client.createClient(Regions.fromName(region));
+            AmazonS3 clientWithRegion = getClientWithRegion(bucketName, client);
 
             clientWithRegion.deleteBucket(new DeleteBucketRequest(bucketName));
-            log.info("Bucket {} na região {} deletado.", bucketName, region);
+            log.info("Bucket {} na região {} deletado.", bucketName, clientWithRegion.getRegion());
         } catch (AmazonS3Exception ex) {
             log.error("Bucket '{}' não encontrado", bucketName);
             throw new BucketNotFoundException("Bucket não existe", ex);
@@ -92,12 +86,7 @@ public class BucketService {
     public void deleteAllBuckets() {
         AmazonS3 client = s3Client.createClient(null);
         client.listBuckets().forEach(bucket -> {
-            String region = client.getBucketLocation(bucket.getName());
-            if ("US".equals(region)) {
-                region = "us-east-1";
-            }
-
-            AmazonS3 clientWithRegion = s3Client.createClient(Regions.fromName(region));
+            AmazonS3 clientWithRegion = getClientWithRegion(bucket.getName(), client);
 
             var objects = clientWithRegion.listObjectsV2(bucket.getName());
             if(objects.getKeyCount() > 0) {
@@ -106,7 +95,16 @@ public class BucketService {
             }
 
             clientWithRegion.deleteBucket(new DeleteBucketRequest(bucket.getName()));
-            log.info("Bucket {} na região {} deletado.", bucket.getName(), region);
+            log.info("Bucket {} na região {} deletado.", bucket.getName(), clientWithRegion.getRegion());
         });
+    }
+
+    private AmazonS3 getClientWithRegion(String bucketName, AmazonS3 client) {
+        String region = client.getBucketLocation(bucketName);
+        if ("US".equals(region)) {
+            region = "us-east-1";
+        }
+
+        return s3Client.createClient(Regions.fromName(region));
     }
 }
