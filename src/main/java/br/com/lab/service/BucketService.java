@@ -1,6 +1,7 @@
 package br.com.lab.service;
 
 import br.com.lab.dto.BucketResponse;
+import br.com.lab.exception.BucketNaoVazioException;
 import br.com.lab.exception.BucketNotFoundException;
 import br.com.lab.exception.RecursoNaoAcessivelException;
 import br.com.lab.factory.S3ClientFactory;
@@ -11,9 +12,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.DeleteBucketRequest;
+import com.amazonaws.services.s3.model.*;
 import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,6 +74,11 @@ public class BucketService {
         AmazonS3 client = s3Client.createClient(null);
         try {
             String region = client.getBucketLocation(bucketName);
+
+            if ("US".equals(region)) {
+                region = "us-east-1";
+            }
+
             AmazonS3 clientWithRegion = s3Client.createClient(Regions.fromName(region));
 
             clientWithRegion.deleteBucket(new DeleteBucketRequest(bucketName));
@@ -83,5 +87,26 @@ public class BucketService {
             log.error("Bucket '{}' não encontrado", bucketName);
             throw new BucketNotFoundException("Bucket não existe", ex);
         }
+    }
+
+    public void deleteAllBuckets() {
+        AmazonS3 client = s3Client.createClient(null);
+        client.listBuckets().forEach(bucket -> {
+            String region = client.getBucketLocation(bucket.getName());
+            if ("US".equals(region)) {
+                region = "us-east-1";
+            }
+
+            AmazonS3 clientWithRegion = s3Client.createClient(Regions.fromName(region));
+
+            var objects = clientWithRegion.listObjectsV2(bucket.getName());
+            if(objects.getKeyCount() > 0) {
+                log.error("Erro ao deletar o bucket '{}'", bucket.getName());
+                throw new BucketNaoVazioException("O Bucket precisa está vazio.");
+            }
+
+            clientWithRegion.deleteBucket(new DeleteBucketRequest(bucket.getName()));
+            log.info("Bucket {} na região {} deletado.", bucket.getName(), region);
+        });
     }
 }

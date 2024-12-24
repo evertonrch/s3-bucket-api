@@ -36,4 +36,10 @@ public class BucketController {
         bucketService.deleteBucket(bucket);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deletAllBuckets() {
+        bucketService.deleteAllBuckets();
+        return ResponseEntity.noContent().build();
+    }
 }
