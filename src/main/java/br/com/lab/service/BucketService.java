@@ -11,6 +11,7 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -56,11 +57,14 @@ public class BucketService {
     }
 
     public List<BucketResponse> listBuckets() {
-        return s3Client.createClient(null).listBuckets().stream().map(bucket -> {
+        AmazonS3 client = s3Client.createClient(null);
+        var buckets = Lists.transform(client.listBuckets(), bucket -> {
             var toLocalDate = DataUtils.toLocalDateTime(bucket.getCreationDate());
-            String bucketName = s3Client.createClient(null).getBucketLocation(bucket.getName());
+            String bucketName = client.getBucketLocation(bucket.getName());
 
             return new BucketResponse(bucket.getName(), bucketName, toLocalDate);
-        }).toList();
+        });
+
+        return buckets;
     }
 }
